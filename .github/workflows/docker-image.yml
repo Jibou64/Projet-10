@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -19,13 +19,12 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '14'
-        working-directory: ./front
 
       - name: Cache Node.js modules
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('front/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
@@ -47,13 +46,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '11'
-        working-directory: ./back
-        
+
       - name: Cache Maven packages
         uses: actions/cache@v3
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('back/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
