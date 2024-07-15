@@ -20,25 +20,32 @@ jobs:
         with:
           node-version: '14'
 
+      - name: Check if front directory exists
+        run: if [ -d "./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/front" ]; then echo "Front-end directory exists"; else echo "Front-end directory does not exist"; exit 1; fi
+
       - name: Cache Node.js modules
+        if: success()
         uses: actions/cache@v3
         with:
           path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('front/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/front/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Install dependencies for Front-end
+        if: success()
         run: npm install
-        working-directory: ./front
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/front
 
       - name: Build Front-end
+        if: success()
         run: npm run build
-        working-directory: ./front
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/front
 
       - name: Run Front-end tests and generate coverage
+        if: success()
         run: npm run test -- --coverage --watch=false
-        working-directory: ./front
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/front
 
       # Back-end steps
       - name: Set up JDK 11
@@ -47,44 +54,55 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
+      - name: Check if back directory exists
+        run: if [ -d "./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back" ]; then echo "Back-end directory exists"; else echo "Back-end directory does not exist"; exit 1; fi
+
       - name: Cache Maven packages
+        if: success()
         uses: actions/cache@v3
         with:
           path: ~/.m2
-          key: ${{ runner.os }}-maven-${{ hashFiles('back/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
       - name: Install dependencies for Back-end
+        if: success()
         run: mvn clean install
-        working-directory: ./back
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back
 
       - name: Run Back-end tests and generate coverage
+        if: success()
         run: mvn test
-        working-directory: ./back
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back
 
       - name: Generate JaCoCo report
+        if: success()
         run: mvn jacoco:report
-        working-directory: ./back
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back
 
       - name: SonarQube Scan
+        if: success()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: mvn sonar:sonar -Dsonar.projectKey=my_project_key -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-        working-directory: ./back
+        working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back
 
       # Build Docker images and push to DockerHub
       - name: Log in to Docker Hub
+        if: success()
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build and push Front-end Docker image
+        if: success()
         run: |
-          docker build -t bobapp-front ./front
+          docker build -t bobapp-front ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/front
           docker tag bobapp-front "${{ secrets.DOCKER_USERNAME }}/bobapp-front:${{ github.sha }}"
           docker push "${{ secrets.DOCKER_USERNAME }}/bobapp-front:${{ github.sha }}"
 
       - name: Build and push Back-end Docker image
+        if: success()
         run: |
-          docker build -t bobapp-back ./back
+          docker build -t bobapp-back ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back
           docker tag bobapp-back "${{ secrets.DOCKER_USERNAME }}/bobapp-back:${{ github.sha }}"
           docker push "${{ secrets.DOCKER_USERNAME }}/bobapp-back:${{ github.sha }}"
