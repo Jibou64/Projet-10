@@ -1,0 +1,92 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Front-end steps
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+        working-directory: ./front
+
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies for Front-end
+        run: npm install
+        working-directory: ./front
+
+      - name: Build Front-end
+        run: npm run build
+        working-directory: ./front
+
+      - name: Run Front-end tests and generate coverage
+        run: npm run test -- --coverage --watch=false
+        working-directory: ./front
+
+      # Back-end steps
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+        working-directory: ./back
+        
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install dependencies for Back-end
+        run: mvn clean install
+        working-directory: ./back
+
+      - name: Run Back-end tests and generate coverage
+        run: mvn test
+        working-directory: ./back
+
+      - name: Generate JaCoCo report
+        run: mvn jacoco:report
+        working-directory: ./back
+
+      - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn sonar:sonar -Dsonar.projectKey=my_project_key -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        working-directory: ./back
+
+      # Build Docker images and push to DockerHub
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push Front-end Docker image
+        run: |
+          docker build -t bobapp-front ./front
+          docker tag bobapp-front "${{ secrets.DOCKER_USERNAME }}/bobapp-front:${{ github.sha }}"
+          docker push "${{ secrets.DOCKER_USERNAME }}/bobapp-front:${{ github.sha }}"
+
+      - name: Build and push Back-end Docker image
+        run: |
+          docker build -t bobapp-back ./back
+          docker tag bobapp-back "${{ secrets.DOCKER_USERNAME }}/bobapp-back:${{ github.sha }}"
+          docker push "${{ secrets.DOCKER_USERNAME }}/bobapp-back:${{ github.sha }}"
