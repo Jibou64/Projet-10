@@ -55,7 +55,7 @@ jobs:
           java-version: '11'
 
       - name: Check if back directory exists
-        run: if [ -d "./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-Ci-CD-main/back [bobapp]" ]; then echo "Back-end directory exists"; else echo "Back-end directory does not exist"; exit 1; fi
+        run: if [ -d "./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back" ]; then echo "Back-end directory exists"; else echo "Back-end directory does not exist"; exit 1; fi
 
       - name: Cache Maven packages
         if: success()
