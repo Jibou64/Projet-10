@@ -85,7 +85,7 @@ jobs:
         if: success()
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn sonar:sonar -Dsonar.projectKey=jibouprojet10 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+        run: mvn sonar:sonar -Dsonar.projectKey=Jibou64_Projet-10 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
         working-directory: ./Gerez-un-projet-collaboratif-en-int-grant-une-demarche-CI-CD-main/back
 
       # Build Docker images and push to DockerHub
